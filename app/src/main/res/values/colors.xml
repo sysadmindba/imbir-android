@@ -2,4 +2,15 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="primary">#E8863A</color>
+    <color name="primary_dark">#4A2F1B</color>
+    <color name="background">#FFF8F0</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="accent">#FF9800</color>
+    <color name="stat_hunger">#4CAF50</color>
+    <color name="stat_happiness">#FF9800</color>
+    <color name="stat_energy">#2196F3</color>
+    <color name="stat_clean">#00BCD4</color>
+    <color name="stat_health">#F44336</color>
+    <color name="stat_trust">#FFC107</color>
 </resources>

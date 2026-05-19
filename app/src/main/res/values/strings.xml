@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Imbir</string>
+    <string name="home">Home</string>
+    <string name="room">Room</string>
+    <string name="achievements">Achievements</string>
+    <string name="btn_sleep">😴 Sleep</string>
+    <string name="btn_wake">☀️ Wake</string>
 </resources>

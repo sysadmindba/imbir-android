@@ -1,87 +1,64 @@
 package com.imbir.game.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.imbir.game.R
+import com.imbir.game.logic.GameManager
+import com.imbir.game.logic.NotificationHelper
+import com.imbir.game.util.PreferencesManager
 
 class MainActivity : AppCompatActivity() {
 
-    private var hunger = 100
-    private var mood = 100
-    private var energy = 100
-    private var cleanliness = 100
-
-    private lateinit var hungerBar: ProgressBar
-    private lateinit var moodBar: ProgressBar
-    private lateinit var energyBar: ProgressBar
-    private lateinit var cleanBar: ProgressBar
-    private lateinit var catSprite: ImageView
-
-    private val returnToIdleRunnable = Runnable {
-        catSprite.setImageResource(R.drawable.cat_idle)
-    }
+    lateinit var gameManager: GameManager
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initViews()
-        setupButtons()
-        updateStats()
+        gameManager = GameManager(PreferencesManager(this))
+
+        NotificationHelper.createChannel(this)
+        requestNotificationPermission()
+
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navController = navHost.navController
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+        bottomNav.setupWithNavController(navController)
     }
 
-    private fun initViews() {
-        hungerBar = findViewById(R.id.hungerBar)
-        moodBar = findViewById(R.id.moodBar)
-        energyBar = findViewById(R.id.energyBar)
-        cleanBar = findViewById(R.id.cleanBar)
-        catSprite = findViewById(R.id.catSprite)
+    override fun onPause() {
+        super.onPause()
+        gameManager.save()
+        val state = gameManager.state
+        NotificationHelper.scheduleReminder(this, state.hunger, state.happiness)
     }
 
-    private fun setupButtons() {
-        findViewById<Button>(R.id.btnFeed).setOnClickListener {
-            hunger = (hunger + 25).coerceAtMost(100)
-            cleanliness = (cleanliness - 5).coerceAtLeast(0)
-            updateAction(R.drawable.cat_eat)
-            updateStats()
-        }
-
-        findViewById<Button>(R.id.btnPlay).setOnClickListener {
-            mood = (mood + 20).coerceAtMost(100)
-            energy = (energy - 10).coerceAtLeast(0)
-            hunger = (hunger - 5).coerceAtLeast(0)
-            updateAction(R.drawable.cat_play)
-            updateStats()
-        }
-
-        findViewById<Button>(R.id.btnSleep).setOnClickListener {
-            energy = (energy + 40).coerceAtMost(100)
-            updateAction(R.drawable.cat_sleep)
-            updateStats()
-        }
-
-        findViewById<Button>(R.id.btnWash).setOnClickListener {
-            cleanliness = (cleanliness + 35).coerceAtMost(100)
-            mood = (mood - 3).coerceAtLeast(0)
-            updateAction(R.drawable.cat_bath)
-            updateStats()
-        }
+    override fun onResume() {
+        super.onResume()
+        NotificationHelper.cancelReminder(this)
     }
 
-    private fun updateAction(drawableRes: Int) {
-        catSprite.setImageResource(drawableRes)
-        // Return to idle after 3 seconds
-        catSprite.removeCallbacks(returnToIdleRunnable)
-        catSprite.postDelayed(returnToIdleRunnable, 3000)
-    }
-
-    private fun updateStats() {
-        hungerBar.progress = hunger
-        moodBar.progress = mood
-        energyBar.progress = energy
-        cleanBar.progress = cleanliness
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    100
+                )
+            }
+        }
     }
 }
